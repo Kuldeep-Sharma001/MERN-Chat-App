@@ -3,7 +3,7 @@ import User from "../models/user.model.js";
 export const getAllUsers = async (req, res) => {
     try {
         
-        const userId = req.userData.id;
+        const userId = req.user.id;
         if (!userId) {
             res.status(500).json({
                 success: false,

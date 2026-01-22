@@ -10,7 +10,7 @@ export const verifyToken = async (req, res, next) => {
         const jwtSecretKey = process.env.JWT_SECRET_KEY;
         const decoded = jwt.verify(token, jwtSecretKey);
 
-        req.userData = decoded;
+        req.user = decoded;
         next();
 
     } catch (error) {
