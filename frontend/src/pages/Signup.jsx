@@ -1,14 +1,18 @@
 import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { IoEye, IoEyeOff } from "react-icons/io5";
+import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
-
+import { setToken } from "../app/slice/auth";
+import { setUserData } from "../app/slice/user";
 const Signup = () => {
   const navigate = useNavigate();
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const token = useSelector(state => state.auth.token);
+  const dispatch = useDispatch();
+  // console.log(token);
   // Form Data State
   const [formData, setFormData] = useState({
     fullname: "",
@@ -16,7 +20,6 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
   });
-
   const isPasswordMatch = formData.password === formData.confirmPassword;
   const isFormValid = 
     formData.fullname && 
@@ -37,12 +40,19 @@ const Signup = () => {
 
   async function handleForm(e) {
     e.preventDefault();
-
+    if (!formData.email.includes('@')) {
+      toast.error('Please enter a valid email ID');
+      return;
+    }
+    if (formData.password.length < 4) {
+      toast.error("Password must contain atleast 4 characters")
+      return;
+    }
     if (!isPasswordMatch) {
       toast.error("Passwords do not match!");
       return;
     }
-
+    const loadingToast = toast.loading('loading')
     try {
       const response = await fetch(api, {
         method: "POST", 
@@ -51,22 +61,25 @@ const Signup = () => {
           "Content-Type": "application/json",
         },
       });
-
+      toast.dismiss(loadingToast);
       const result = await response.json();
-
-      if (!response.ok) {
+      if (!result.success) {
         throw new Error(result.message || "Signup failed");
       }
+      // console.log(result);
+      localStorage.setItem('tokenc', result.token);
+      localStorage.setItem("userc", JSON.stringify(result.user));
 
+      dispatch(setToken(result.token));
+      dispatch(setUserData(result.user));
       toast.success(result.message || "Signup Successful!");
-      
-      
       setFormData({ fullname: "", email: "", password: "", confirmPassword: "" });
       setTimeout(() => {
-        navigate("/login");
+        navigate("/");
       }, 1500);
 
     } catch (error) {
+      toast.dismiss(loadingToast);
       toast.error(error.message);
       console.error(error);
     }
@@ -97,7 +110,7 @@ const Signup = () => {
 
         {/* Email */}
         <input
-          type="email"
+          type="text"
           placeholder="Email ID"
           value={formData.email}
           name="email"
@@ -112,7 +125,6 @@ const Signup = () => {
             placeholder="Password"
             value={formData.password}
             name="password"
-            minLength={4}
             onChange={handleData}
             className="w-full h-12 text-white bg-black/40 px-6 pr-12 text-lg rounded-full border border-white/20 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all placeholder:text-gray-400"
           />

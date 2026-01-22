@@ -2,10 +2,14 @@ import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { IoEye, IoEyeOff } from "react-icons/io5";
 import { NavLink, useNavigate } from "react-router-dom";
-
+import { useSelector, useDispatch } from "react-redux";
+import { setToken } from "../app/slice/auth";
+import { setUserData } from "../app/slice/user";
 const Signin = () => {
   const navigate = useNavigate();
-
+  const token = useSelector(state => state.auth.token);
+  const dispatch = useDispatch();
+  // console.log(token);
   // State
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -34,6 +38,7 @@ const Signin = () => {
       return;
     }
 
+      const loadingToast = toast.loading("loading");
     try {
       const response = await fetch(api, {
         method: "POST",
@@ -48,18 +53,24 @@ const Signin = () => {
       if (!response.ok) {
         throw new Error(result.message || "Login failed");
       }
-
+      localStorage.setItem('tokenc', result.token);
+      localStorage.setItem('userc', JSON.stringify(result.user));
+      dispatch(setToken(result.token));
       toast.success(result.message || "Login Successful!");
 
       // Clear form and redirect
       setFormData({ email: "", password: "" });
+      dispatch(setUserData(result.user));
 
+      // console.log(result);
       setTimeout(() => {
         navigate("/");
       }, 1000);
     } catch (error) {
       toast.error(error.message);
       console.error(error);
+    } finally {
+      toast.dismiss(loadingToast);
     }
   }
 

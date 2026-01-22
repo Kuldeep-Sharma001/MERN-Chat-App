@@ -6,13 +6,15 @@ import { verifyToken } from './middlewares/verifyToken.js';
 import userRoutes from './routes/userRoutes.js';
 import messageRouter from './routes/messageRoutes.js';
 import cors from 'cors';
-const app = express();
+import { app, server } from './socket/socket.js';
+
 const port = process.env.PORT || 3000;
 
 app.use(cors(
     {
         origin: "http://localhost:5173",
-        credentials:true
+        credentials: true,
+        methods:['GET', 'POST']
     }
 ))
 app.use(express.json());
@@ -20,6 +22,6 @@ app.use("/api", authRoutes);
 app.use("/", verifyToken, userRoutes);
 app.use("/message", verifyToken, messageRouter);
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log("Server is running on port", port);
 })
